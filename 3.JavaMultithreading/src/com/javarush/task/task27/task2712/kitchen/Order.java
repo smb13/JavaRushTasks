@@ -14,11 +14,15 @@ import java.util.List;
  */
 public class Order {
     private final Tablet tablet;
-    protected List<Dish> dishes = new ArrayList<>();
+    protected List<Dish> dishes;
 
-    public Order(Tablet tablet) throws IOException {
-        dishes = ConsoleHelper.getAllDishesForOrder();
+    public Order(Tablet tablet) throws IOException{
+        initDishes();
         this.tablet = tablet;
+    }
+
+    protected void initDishes() throws IOException {
+        dishes = ConsoleHelper.getAllDishesForOrder();
     }
 
     public int getTotalCookingTime() {
@@ -27,6 +31,9 @@ public class Order {
         return totalDuration;
     }
 
+    public List<Dish> getDishes() {
+        return dishes;
+    }
 
     public boolean isEmpty() {
         return dishes.size() == 0;
@@ -34,11 +41,15 @@ public class Order {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("Your order: [");
-        for (Dish d : dishes) {
-            sb.append(d);
-            if (d.ordinal() < (dishes.size() - 1)) sb.append(", ");
-        }
-        return sb.append("] of ").append(tablet.toString()).append(", cooking time ").append(Integer.toString(getTotalCookingTime())).append("min").toString();
+        StringBuffer sb = new StringBuffer("Your order: [");
+            for (Dish d : dishes) {
+                sb.append(d);
+                if (d.ordinal() < (dishes.size() - 1)) sb.append(", ");
+            }
+            return sb.append("] of ").append(tablet.toString()).append(", cooking time ").append(Integer.toString(getTotalCookingTime())).append("min").toString();
+    }
+
+    public Tablet getTablet() {
+        return tablet;
     }
 }

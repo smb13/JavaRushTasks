@@ -1,6 +1,8 @@
 package com.javarush.task.task27.task2712.ad;
 
 import com.javarush.task.task27.task2712.ConsoleHelper;
+import com.javarush.task.task27.task2712.statistic.StatisticManager;
+import com.javarush.task.task27.task2712.statistic.event.VideoSelectedEventDataRow;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,14 +20,13 @@ public class AdvertisementManager {
         this.timeSeconds = timeSeconds;
     }
 
-    public void processVideos() {
-        if(storage.list().isEmpty())
+    public void processVideos() throws NoVideoAvailableException{
+        if(listToDisplay().isEmpty()) {
             throw new NoVideoAvailableException();
+        }
         List<Advertisement> bestAdsList = getBestAdsList();
 
-        List<Advertisement> videoList = bestAdsList;
-
-        Collections.sort(videoList, new Comparator<Advertisement>() {
+        Collections.sort(bestAdsList, new Comparator<Advertisement>() {
             public int compare(Advertisement o1, Advertisement o2) {
                 if (o2.getAmountPerOneDisplaying() == o1.getAmountPerOneDisplaying()) {
                     return (int)((o1.getAmountPerOneDisplaying() * 1000 / o1.getDuration()) - (o2.getAmountPerOneDisplaying() * 1000 / o2.getDuration()));
@@ -35,24 +36,36 @@ public class AdvertisementManager {
             }
         });
 
-        for (Advertisement ad : videoList) {
+        StatisticManager.getInstance().register(new VideoSelectedEventDataRow(bestAdsList, sumAmount(bestAdsList), sumTime(bestAdsList)));
+
+        for (Advertisement ad : bestAdsList) {
             ConsoleHelper.writeMessage(ad.getName() + " is displaying... " + ad.getAmountPerOneDisplaying() + ", " + ad.getAmountPerOneDisplaying() * 1000 / ad.getDuration());
             ad.revalidate();
         }
     }
 
-    public List<Advertisement> getBestAdsList() {
+    public List<Advertisement> listToDisplay() {
+        List<Advertisement> l = new ArrayList<Advertisement>();
+        for (Advertisement a : storage.list()) {
+            if (a.getHits() > 0) {
+                l.add(a);
+            }
+        }
+        return l;
+    }
+
+    public List<Advertisement> getBestAdsList() throws NoVideoAvailableException {
         List<List<Advertisement>> allAdsLists = getAlltAdsList();
 
         Collections.sort(allAdsLists, new Comparator<List<Advertisement>>() {
 
             public int compare(List<Advertisement> o1, List<Advertisement> o2) {
-                if (sumAmount(o1) != sumAmount(o2)) {
-                    return sumAmount(o1) - sumAmount(o2);
+                if (AdvertisementManager.sumAmount(o1) != AdvertisementManager.sumAmount(o2)) {
+                    return AdvertisementManager.sumAmount(o1) - AdvertisementManager.sumAmount(o2);
                 }
 
-                if (sumTime(o1) != sumTime(o2)) {
-                    return sumTime(o1) - sumTime(o2);
+                if (AdvertisementManager.sumTime(o1) != AdvertisementManager.sumTime(o2)) {
+                    return AdvertisementManager.sumTime(o1) - AdvertisementManager.sumTime(o2);
                 }
 
                 if (o1.size() != o2.size()) {
@@ -61,33 +74,36 @@ public class AdvertisementManager {
 
                 return 0;
             }
-
-            private int sumAmount (List<Advertisement> list) {
-                int sum = 0;
-                for (Advertisement ad : list) {
-                    sum += ad.getAmountPerOneDisplaying();
-                }
-                return sum;
-            }
-
-            private int sumTime (List<Advertisement> list) {
-                int sum = 0;
-                for (Advertisement ad : list) {
-                    sum += ad.getDuration();
-                }
-                return sum;
-            }
-
         });
-        return allAdsLists.get(allAdsLists.size()-1);
+        if (!allAdsLists.isEmpty()) {
+            return allAdsLists.get(allAdsLists.size()-1);
+        } else {
+            throw new NoVideoAvailableException();
+        }
+    }
+
+    private static int sumAmount (List<Advertisement> list) {
+        int sum = 0;
+        for (Advertisement ad : list) {
+            sum += ad.getAmountPerOneDisplaying();
+        }
+        return sum;
+    }
+
+    private static int sumTime (List<Advertisement> list) {
+        int sum = 0;
+        for (Advertisement ad : list) {
+            sum += ad.getDuration();
+        }
+        return sum;
     }
 
     public List<List<Advertisement>> getAlltAdsList() {
         List<List<Advertisement>> result = new ArrayList<>();
-        final int _n = storage.list().size();
-        final List<Advertisement> _list = storage.list();
+        final int _n = listToDisplay().size();
+        final List<Advertisement> _list = listToDisplay();
         final int _time = timeSeconds;
-        for (int i = 1; i <= storage.list().size(); i++) {
+        for (int i = 1; i <= listToDisplay().size(); i++) {
             final int _k = i;
             List<List<Advertisement>> resK = new ArrayList() {
                 private int[] i = new int[_k];
@@ -128,17 +144,17 @@ public class AdvertisementManager {
                 }
 
                 public List<List<Advertisement>>_makelist() {
-                        int j;
-                        List<Advertisement> currList = new ArrayList<>();
-                        do {
-                            for (j = 0; j < k; j++) {
-                                currList.add(list.get(i[j]));
-                            }
-                            if (checkTime(currList)) {
-                                add(currList);
-                            }
-                            currList = new ArrayList<>();
-                        } while (this._next());
+                    int j;
+                    List<Advertisement> currList = new ArrayList<>();
+                    do {
+                        for (j = 0; j < k; j++) {
+                            currList.add(list.get(i[j]));
+                        }
+                        if (checkTime(currList)) {
+                            add(currList);
+                        }
+                        currList = new ArrayList<>();
+                    } while (this._next());
                     return this;
                 }
 
