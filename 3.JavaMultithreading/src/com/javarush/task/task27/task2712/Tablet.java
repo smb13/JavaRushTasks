@@ -23,6 +23,14 @@ public class Tablet {
         this.number = number;
     }
 
+    public LinkedBlockingQueue<Order> getQueue() {
+        return queue;
+    }
+
+    public void setQueue(LinkedBlockingQueue<Order> queue) {
+        this.queue = queue;
+    }
+
     public Order createOrder() {
         Order order = null;
         try {
@@ -58,15 +66,10 @@ public class Tablet {
             } catch (InterruptedException e) {
 
             }
-            //setChanged();
-            //notifyObservers(order);
-
         }
     }
 
-    public void setQueue(LinkedBlockingQueue<Order> queue) {
-        this.queue = queue;
-    }
+
 
     @Override
     public String toString() {

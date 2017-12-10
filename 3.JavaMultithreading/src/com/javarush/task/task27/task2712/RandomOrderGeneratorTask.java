@@ -27,7 +27,7 @@ public class RandomOrderGeneratorTask implements Runnable {
                 try {
                     Thread.sleep(interval);
                 } catch (InterruptedException e) {
-                    break;
+                    Thread.currentThread().interrupt();
                 }
             }
         }

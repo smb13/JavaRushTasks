@@ -16,13 +16,23 @@ public class Cook extends Observable implements Runnable{
     private final String name;
     private boolean busy;
     private LinkedBlockingQueue<Order> queue;
+    private LinkedBlockingQueue<Order> queueReady;
+    private boolean isCancel = false;
 
     public Cook(String name) {
         this.name = name;
     }
 
-    public void setOrderQueue(LinkedBlockingQueue<Order> orderQueue) {
-        this.queue = orderQueue;
+    public void setCancel() {
+        isCancel = true;
+    }
+
+    public void setQueue(LinkedBlockingQueue<Order> queue) {
+        this.queue = queue;
+    }
+
+    public void setQueueReady(LinkedBlockingQueue<Order> queueReady) {
+        this.queueReady = queueReady;
     }
 
     @Override
@@ -30,29 +40,46 @@ public class Cook extends Observable implements Runnable{
         return name;
     }
 
+
+    @Override
+    public void run() {
+        while (!isCancel || !queue.isEmpty()){
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                ConsoleHelper.writeMessage(e.getMessage());
+            }
+            if (queue.peek()!=null){
+                if (!this.isBusy()) {
+                    try{
+                        Order order = queue.take();
+                        if (order!=null){
+                            startCookingOrder(order);
+                        }
+                    }
+                    catch (InterruptedException e){
+
+                    }
+                }
+            }
+        }
+    }
+
     public void startCookingOrder(Order order) {
         busy = true;
         StatisticManager.getInstance().register(new CookedOrderEventDataRow((order.getTablet()).toString(), name, (order).getTotalCookingTime() * 60, (order.getDishes())));
-        setChanged();
-        notifyObservers(order);
         try {
             Thread.sleep(order.getTotalCookingTime()*10);
+            queueReady.put(order);
         } catch (InterruptedException e) {
 
         }
+        ConsoleHelper.writeMessage(order.toString() + " was cooked by " + this.toString());
+
         busy = false;
     }
 
     public boolean isBusy() {
         return busy;
     }
-
-
-/*@Override
-    public void update(Observable o, Object arg) {
-        StatisticManager.getInstance().register(new CookedOrderEventDataRow(((Tablet) o).toString(), name, ((Order) arg).getTotalCookingTime() * 60, ((Order) arg).getDishes()));
-        //ConsoleHelper.writeMessage("Start cooking - " + arg);
-        setChanged();
-        notifyObservers(arg);
-    }*/
 }

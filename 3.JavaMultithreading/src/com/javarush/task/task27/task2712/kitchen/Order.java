@@ -42,9 +42,9 @@ public class Order {
     @Override
     public String toString() {
         StringBuffer sb = new StringBuffer("Your order: [");
-            for (Dish d : dishes) {
-                sb.append(d);
-                if (d.ordinal() < (dishes.size() - 1)) sb.append(", ");
+            for (int i=0; i<dishes.size(); i++) {
+                sb.append(dishes.get(i));
+                if (i != dishes.size() - 1) sb.append(", ");
             }
             return sb.append("] of ").append(tablet.toString()).append(", cooking time ").append(Integer.toString(getTotalCookingTime())).append("min").toString();
     }

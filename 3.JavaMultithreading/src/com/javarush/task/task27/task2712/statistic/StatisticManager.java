@@ -34,9 +34,9 @@ public class StatisticManager {
     }
 
 
-    public void register(Cook cook) {
+    /*public void register(Cook cook) {
         cooks.add(cook);
-    }
+    }*/
 
     public Map <Date, Long> getVideoAmountStat(){
         Map <Date, Long> result = new HashMap<>();
@@ -74,9 +74,9 @@ public class StatisticManager {
         return result;
     }
 
-    public Set<Cook> getCooks() {
+    /*public Set<Cook> getCooks() {
         return cooks;
-    }
+    }*/
 
     private class StatisticStorage {
         private Map<EventType, List<EventDataRow>> storage = new HashMap<>();

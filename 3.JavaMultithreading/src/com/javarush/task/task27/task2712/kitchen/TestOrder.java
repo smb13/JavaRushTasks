@@ -21,11 +21,10 @@ public class TestOrder extends Order {
     protected void initDishes() throws IOException {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         dishes = new ArrayList<>();
-        List<Dish> list = new ArrayList<>(Arrays.asList(Dish.values()));
-        Collections.shuffle(list);
-        int rnd = random.nextInt(list.size());
-        for (int i = 0; i < rnd; i++) {
-            dishes.add(list.get(i));
+        for (Dish dish : Dish.values()) {
+            if ((int) (random.nextInt(2)) == 1) {
+                dishes.add(dish);
+            }
         }
     }
 }

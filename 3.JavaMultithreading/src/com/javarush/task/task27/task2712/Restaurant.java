@@ -15,33 +15,37 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Restaurant {
     private static final int ORDER_CREATING_INTERVAL = 100;
     private static final LinkedBlockingQueue<Order> orderQueue = new LinkedBlockingQueue<Order>();
+    private static final LinkedBlockingQueue<Order> readyOrderQueue = new LinkedBlockingQueue<Order>();
 
     public static void main (String[] args) {
-        //Tablet t5 = new Tablet(5);
-
         Cook amigo = new Cook("Amigo");
+        amigo.setQueue(orderQueue);
         Cook diego = new Cook("Diego");
+        diego.setQueue(orderQueue);
+        amigo.setQueueReady(readyOrderQueue);
+        diego.setQueueReady(readyOrderQueue);
+        Waiter waiter1 = new Waiter(readyOrderQueue, "Papy");
+        Waiter waiter2 = new Waiter(readyOrderQueue, "Billy");
 
-        amigo.setOrderQueue(orderQueue);
-        diego.setOrderQueue(orderQueue);
 
-        StatisticManager.getInstance().register(amigo);
-        StatisticManager.getInstance().register(diego);
 
-        Waiter waiter = new Waiter();
+        Thread amigoThread = new Thread(amigo);
+        amigoThread.start();
+        Thread diegoThread = new Thread(diego);
+        diegoThread.start();
+        Thread waiter1Thread = new Thread(waiter1);
+        Thread waiter2Thread = new Thread(waiter2);
+        waiter1Thread.start();
+        waiter2Thread.start();
+
 
         List<Tablet> tabletList = new ArrayList<>();
         for (int i=1; i<=5; i++) {
             Tablet t = new Tablet(i);
+            t.setQueue(orderQueue);
             tabletList.add(t);
-            //t.addObserver(amigo);
-            //t.addObserver(diego);
         }
 
-        //t5.addObserver(amigo);
-        amigo.addObserver(waiter);
-        diego.addObserver(waiter);
-        //Order order = t5.createOrder();
 
         Thread thread = new Thread(new RandomOrderGeneratorTask(tabletList, ORDER_CREATING_INTERVAL));
         thread.start();
@@ -51,16 +55,29 @@ public class Restaurant {
 
         }
         thread.interrupt();
-        /*t5.createOrder();
-        t5.createOrder();
-        t5.createOrder();*/
+        amigo.setCancel();
+        diego.setCancel();
+        try {
+            amigoThread.join();
+            diegoThread.join();
+        } catch (InterruptedException e) {
+
+        }
+
+        waiter1.setCancel();
+        waiter2.setCancel();
+        try {
+            waiter1Thread.join();
+            waiter2Thread.join();
+        } catch (InterruptedException e) {
+
+        }
 
         DirectorTablet directorTablet = new DirectorTablet();
         directorTablet.printAdvertisementProfit();
         directorTablet.printCookWorkloading();
         directorTablet.printActiveVideoSet();
         directorTablet.printArchivedVideoSet();
-
 
     }
 }
